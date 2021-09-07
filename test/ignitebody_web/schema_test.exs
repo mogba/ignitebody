@@ -38,6 +38,7 @@ defmodule IgnitebodyWeb.SchemaTest do
     end
 
     test "when given an invalid id, returns an error", %{conn: conn}  do
+      # Não é necessário escrever "query { ... }". Já é pressuposto que é uma query.
       query = """
         {
           getUser(id: aaaaaaaaa) {
@@ -62,6 +63,40 @@ defmodule IgnitebodyWeb.SchemaTest do
       }
 
       assert response == expected_response
+    end
+  end
+
+  describe "users mutations" do
+    test "when given valid params, creates the user", %{conn: conn} do
+      # É necessário escrever "mutation", diferentemente de comandos com query.
+      mutation = """
+        mutation {
+          createUser(input: {
+            name: "Pamela",
+            email: "alemap@laranja.com",
+            password: "123456"
+          }) {
+            id
+            name
+          }
+        }
+      """
+
+      response =
+        conn
+        |> post("/api/graphql", %{query: mutation})
+        |> json_response(:ok)
+
+        # Validação via pattern matching.
+        # (O valor retornado para o id está sendo ignorado com "_").
+        assert %{
+          "data" => %{
+            "createUser" => %{
+              "id" => _id,
+              "name" => "Pamela"
+            }
+          }
+        } = response
     end
   end
 end
